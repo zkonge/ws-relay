@@ -14,7 +14,7 @@ async fn main() {
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "ws_relay=debug")
     }
-    let addr = env::args().skip(1).next().unwrap_or_else(|| "127.0.0.1:3000".to_owned());
+    let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:3000".to_owned());
 
     let app = Router::new()
         .route("/", get(index))

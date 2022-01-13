@@ -7,12 +7,14 @@ use axum::{
 };
 use dashmap::DashMap;
 use futures::{
-    future::join,
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
 use once_cell::sync::Lazy;
-use tokio::sync::oneshot::{channel, Receiver, Sender};
+use tokio::{
+    select,
+    sync::oneshot::{channel, Receiver, Sender},
+};
 
 static SESSIONS: Lazy<DashMap<String, Sender<WebSocket>>> = Lazy::new(DashMap::new);
 
@@ -38,10 +40,10 @@ pub async fn session_handler(wsu: WebSocketUpgrade, Path(id): Path<String>) -> i
 
 async fn bridge(initiator: WebSocket, responder_channel: Receiver<WebSocket>) {
     let responder = responder_channel.await.unwrap();
-    let (i_tx, i_rx) = initiator.split();
-    let (r_tx, r_rx) = responder.split();
+    let (mut i_tx, mut i_rx) = initiator.split();
+    let (mut r_tx, mut r_rx) = responder.split();
 
-    async fn relay(mut tx: SplitSink<WebSocket, Message>, mut rx: SplitStream<WebSocket>) {
+    async fn relay(tx: &mut SplitSink<WebSocket, Message>, rx: &mut SplitStream<WebSocket>) {
         while let Some(Ok(m)) = rx.next().await {
             if tx.send(m).await.is_err() {
                 break;
@@ -49,5 +51,8 @@ async fn bridge(initiator: WebSocket, responder_channel: Receiver<WebSocket>) {
         }
     }
 
-    join(relay(r_tx, i_rx), relay(i_tx, r_rx)).await;
+    let _ = select! {
+        _ = relay(&mut r_tx,&mut i_rx) => i_tx.send(Message::Close(None)).await,
+        _ = relay(&mut i_tx,&mut r_rx) => r_tx.send(Message::Close(None)).await
+    };
 }
