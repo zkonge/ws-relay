@@ -3,6 +3,7 @@ use axum::{
         ws::{Message, WebSocket},
         Path, WebSocketUpgrade,
     },
+    http::StatusCode,
     response::IntoResponse,
 };
 use dashmap::DashMap;
@@ -19,6 +20,9 @@ use tokio::{
 static SESSIONS: Lazy<DashMap<String, Sender<WebSocket>>> = Lazy::new(DashMap::new);
 
 pub async fn session_handler(wsu: WebSocketUpgrade, Path(id): Path<String>) -> impl IntoResponse {
+    if id.len() > 32 {
+        return (StatusCode::FORBIDDEN, "Max session id length is 32").into_response();
+    }
     match SESSIONS.remove(&id) {
         // if session exists, act as responder
         Some((_, session)) => wsu
