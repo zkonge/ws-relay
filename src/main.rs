@@ -5,20 +5,18 @@ use axum::{
     routing::get,
     Router,
 };
-use session::session_handler;
+use session::handler;
 
 mod session;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "ws_relay=debug")
+        env::set_var("RUST_LOG", "ws_relay=debug");
     }
     let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:3000".to_owned());
 
-    let app = Router::new()
-        .route("/", get(index))
-        .route("/session/:id", get(session_handler));
+    let app = Router::new().route("/", get(index)).route("/session/:id", get(handler));
 
     let addr = SocketAddr::from_str(&addr).unwrap();
 
