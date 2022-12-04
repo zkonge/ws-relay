@@ -1,4 +1,4 @@
-use std::time::Duration;
+use core::time::Duration;
 
 use axum::{
     extract::{
@@ -20,9 +20,9 @@ use tokio::{
     time::timeout,
 };
 
-static SESSIONS: Lazy<DashMap<String, Sender<WebSocket>>> = Lazy::new(DashMap::new);
+static SESSIONS: Lazy<DashMap<Box<str>, Sender<WebSocket>>> = Lazy::new(DashMap::new);
 
-pub async fn handler(wsu: WebSocketUpgrade, Path(id): Path<String>) -> impl IntoResponse {
+pub async fn handler(wsu: WebSocketUpgrade, Path(id): Path<Box<str>>) -> impl IntoResponse {
     if id.len() > 32 {
         return (StatusCode::FORBIDDEN, "Max session id length is 32").into_response();
     }
