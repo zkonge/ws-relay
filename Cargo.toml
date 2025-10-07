@@ -1,7 +1,7 @@
 [package]
 name = "ws-relay"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Relay Websocket connections."
 authors = ["zkonge <zkonge@outlook.com>"]
 readme = "README.md"
@@ -10,11 +10,10 @@ repository = "https://github.com/zkonge/ws-relay"
 license-file = "LICENSE"
 
 [dependencies]
-once_cell = { version = "1", default-features = false }
-dashmap = { version = "5", default-features = false }
-tokio = { version = "1", features = ["macros"], default-features = false }
-futures = { version = "0.3", default-features = false }
-axum = { version = "0.6", features = ["ws", "http1"], default-features = false }
+tokio = { version = "1.47.1", features = ["macros"], default-features = false }
+futures-util = { version = "0.3", default-features = false }
+axum = { version = "0.8.6", features = ["ws", "http1"], default-features = false }
+dashmap = { version = "6.1.0", default-features = false }
 
 [profile.release]
 strip = true

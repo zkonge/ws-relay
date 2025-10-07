@@ -2,11 +2,12 @@ use core::str::FromStr;
 use std::{env, net::SocketAddr};
 
 use axum::{
+    Router,
     response::{Html, IntoResponse},
     routing::get,
-    Router,
 };
 use session::handler;
+use tokio::net::TcpListener;
 
 mod session;
 
@@ -23,8 +24,7 @@ async fn main() {
     let addr = SocketAddr::from_str(&addr).unwrap();
 
     println!("Listen on {addr}");
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    axum::serve(TcpListener::bind(addr).await.unwrap(), app)
         .await
         .unwrap();
 }

@@ -1,26 +1,26 @@
 use core::time::Duration;
+use std::sync::LazyLock;
 
 use axum::{
     extract::{
-        ws::{Message, WebSocket},
         Path, WebSocketUpgrade,
+        ws::{Message, WebSocket},
     },
     http::StatusCode,
     response::IntoResponse,
 };
 use dashmap::DashMap;
-use futures::{
-    stream::{SplitSink, SplitStream},
+use futures_util::{
     SinkExt, StreamExt,
+    stream::{SplitSink, SplitStream},
 };
-use once_cell::sync::Lazy;
 use tokio::{
     select,
-    sync::oneshot::{channel, Sender},
+    sync::oneshot::{Sender, channel},
     time::timeout,
 };
 
-static SESSIONS: Lazy<DashMap<Box<str>, Sender<WebSocket>>> = Lazy::new(DashMap::new);
+static SESSIONS: LazyLock<DashMap<Box<str>, Sender<WebSocket>>> = LazyLock::new(DashMap::new);
 
 pub async fn handler(wsu: WebSocketUpgrade, Path(id): Path<Box<str>>) -> impl IntoResponse {
     if id.len() > 32 {
